@@ -1,4 +1,3 @@
-import { configs } from '@eslint/js'
 import axios from 'axios'
 
 // create a pre-configured axios instance
