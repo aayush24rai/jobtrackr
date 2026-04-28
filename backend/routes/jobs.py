@@ -171,6 +171,18 @@ def delete_contact(
 
 # INTERVIEWS ------------------------
 
+@router.get("/{job_id}/interviews", response_model=List[schemas.InterviewResponse])
+def get_interviews(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    get_job_or_404(job_id, current_user.id, db)
+    return db.query(models.Interview).filter(
+        models.Interview.job_id == job_id
+    ).all()
+
+
 @router.post("/{job_id}/interviews", response_model=schemas.InterviewResponse, status_code=201)
 def add_interview(
     job_id: int,
