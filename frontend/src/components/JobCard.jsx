@@ -1,4 +1,4 @@
-export default function JobCard({ job, onDelete, isDragging = false }) {
+export default function JobCard({ job, onDelete, onClick, isDragging = false }) {
   const salary =
     job.salary_min || job.salary_max
       ? `$${job.salary_min ? job.salary_min.toLocaleString() : '?'} – $${job.salary_max ? job.salary_max.toLocaleString() : '?'}`
@@ -6,8 +6,10 @@ export default function JobCard({ job, onDelete, isDragging = false }) {
 
   return (
     <div
+      onClick={onClick}
       className={`bg-gray-800 rounded-lg p-3.5 border select-none
         ${isDragging ? 'border-indigo-500 shadow-xl' : 'border-gray-700 hover:border-gray-500'}
+        ${onClick ? 'cursor-pointer' : ''}
         transition-colors`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -21,7 +23,7 @@ export default function JobCard({ job, onDelete, isDragging = false }) {
         {onDelete && (
           <button
             onPointerDown={e => e.stopPropagation()}
-            onClick={() => onDelete(job.id)}
+            onClick={e => { e.stopPropagation(); onDelete(job.id) }}
             className="text-gray-600 hover:text-red-400 transition-colors shrink-0 text-xs mt-0.5 leading-none"
             aria-label="Delete job"
           >

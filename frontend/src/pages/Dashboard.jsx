@@ -4,12 +4,14 @@ import client from '../api/client'
 import StatsBar from '../components/StatsBar'
 import KanbanBoard from '../components/KanbanBoard'
 import AddJobModal from '../components/AddJobModal'
+import JobDetailModal from '../components/JobDetailModal'
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [selectedJob, setSelectedJob] = useState(null)
 
   useEffect(() => {
     client.get('/jobs/')
@@ -31,6 +33,12 @@ export default function Dashboard() {
       prev.map(j => (j.id === jobId ? { ...j, status: newStatus } : j))
     )
     await client.patch(`/jobs/${jobId}`, { status: newStatus })
+  }
+
+  async function handleUpdateJob(jobId, updates) {
+    const { data: updated } = await client.patch(`/jobs/${jobId}`, updates)
+    setJobs(prev => prev.map(j => (j.id === jobId ? updated : j)))
+    setSelectedJob(null)
   }
 
   async function handleDelete(jobId) {
@@ -73,6 +81,7 @@ export default function Dashboard() {
             jobs={jobs}
             onStatusChange={handleStatusChange}
             onDelete={handleDelete}
+            onCardClick={setSelectedJob}
           />
         )}
       </main>
@@ -81,6 +90,15 @@ export default function Dashboard() {
         <AddJobModal
           onClose={() => setShowModal(false)}
           onAdd={handleAddJob}
+        />
+      )}
+
+      {selectedJob && (
+        <JobDetailModal
+          job={selectedJob}
+          onClose={() => setSelectedJob(null)}
+          onSave={handleUpdateJob}
+          onDelete={handleDelete}
         />
       )}
     </div>

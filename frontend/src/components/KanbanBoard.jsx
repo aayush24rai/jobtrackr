@@ -19,7 +19,7 @@ const COLUMNS = [
   { status: 'Rejected',     headerColor: 'text-red-400',   borderColor: 'border-red-900'   },
 ]
 
-function DraggableCard({ job, onDelete }) {
+function DraggableCard({ job, onDelete, onCardClick }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: job.id,
   })
@@ -36,12 +36,12 @@ function DraggableCard({ job, onDelete }) {
       {...attributes}
       className={`cursor-grab active:cursor-grabbing touch-none ${isDragging ? 'opacity-0' : ''}`}
     >
-      <JobCard job={job} onDelete={onDelete} />
+      <JobCard job={job} onDelete={onDelete} onClick={() => onCardClick(job)} />
     </div>
   )
 }
 
-function Column({ status, headerColor, borderColor, jobs, onDelete }) {
+function Column({ status, headerColor, borderColor, jobs, onDelete, onCardClick }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
 
   return (
@@ -62,7 +62,7 @@ function Column({ status, headerColor, borderColor, jobs, onDelete }) {
           ${isOver ? 'bg-indigo-900/20 border-indigo-500' : 'bg-gray-800/40'}`}
       >
         {jobs.map(job => (
-          <DraggableCard key={job.id} job={job} onDelete={onDelete} />
+          <DraggableCard key={job.id} job={job} onDelete={onDelete} onCardClick={onCardClick} />
         ))}
 
         {jobs.length === 0 && (
@@ -75,7 +75,7 @@ function Column({ status, headerColor, borderColor, jobs, onDelete }) {
   )
 }
 
-export default function KanbanBoard({ jobs, onStatusChange, onDelete }) {
+export default function KanbanBoard({ jobs, onStatusChange, onDelete, onCardClick }) {
   const [activeJob, setActiveJob] = useState(null)
 
   const sensors = useSensors(
@@ -121,6 +121,7 @@ export default function KanbanBoard({ jobs, onStatusChange, onDelete }) {
             borderColor={col.borderColor}
             jobs={jobs.filter(j => j.status === col.status)}
             onDelete={onDelete}
+            onCardClick={onCardClick}
           />
         ))}
       </div>
