@@ -1,47 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-const STATUSES = ['Wishlist', 'Applied', 'Interviewing', 'Offer', 'Rejected']
+const CloseIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M18 6 6 18M6 6l12 12"/>
+  </svg>
+)
 
-const INITIAL = {
-  company: '',
-  role: '',
-  status: 'Wishlist',
-  url: '',
-  date_applied: '',
-  deadline: '',
-  salary_min: '',
-  salary_max: '',
-  notes: '',
+const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected']
+
+const EMPTY = {
+  company: '', role: '', status: 'Wishlist',
+  date_applied: '', deadline: '', url: '',
+  salary_min: '', salary_max: '', notes: '',
 }
 
-const inputCls =
-  'w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30'
-
-export default function AddJobModal({ onClose, onAdd }) {
-  const [form, setForm] = useState(INITIAL)
+export default function AddJobModal({ initialStatus, onClose, onAdd }) {
+  const [form, setForm] = useState({ ...EMPTY, status: initialStatus || 'Wishlist' })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]     = useState('')
+  const firstRef = useRef(null)
+
+  useEffect(() => { firstRef.current?.focus() }, [])
 
   function set(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  const canSubmit = form.company.trim() && form.role.trim()
+
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
-    setLoading(true)
+    if (!canSubmit) return
+    setError(''); setLoading(true)
     try {
       await onAdd({
-        company: form.company,
-        role: form.role,
-        status: form.status,
-        url: form.url || null,
+        company:      form.company.trim(),
+        role:         form.role.trim(),
+        status:       form.status,
+        url:          form.url          || null,
         date_applied: form.date_applied || null,
-        deadline: form.deadline || null,
-        // Parse to int — backend expects Optional[int], not a string
-        salary_min: form.salary_min ? parseInt(form.salary_min, 10) : null,
-        salary_max: form.salary_max ? parseInt(form.salary_max, 10) : null,
-        notes: form.notes || null,
+        deadline:     form.deadline     || null,
+        salary_min:   form.salary_min   ? parseInt(form.salary_min, 10)  : null,
+        salary_max:   form.salary_max   ? parseInt(form.salary_max, 10)  : null,
+        notes:        form.notes        || null,
       })
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to add job.')
@@ -50,99 +51,68 @@ export default function AddJobModal({ onClose, onAdd }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
-      onMouseDown={e => e.target === e.currentTarget && onClose()}
-    >
-      <div className="bg-gray-800 rounded-xl w-full max-w-lg border border-gray-700 shadow-2xl">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-700">
-          <h2 className="text-base font-semibold text-white">Add Job</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">✕</button>
+    <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}>
+      <form className="modal" onMouseDown={e => e.stopPropagation()} onSubmit={handleSubmit}>
+        <div className="modal-hd">
+          <h3>Add job</h3>
+          <button type="button" className="modal-close" onClick={onClose}><CloseIcon/></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-300 text-sm px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
+        <div className="modal-body">
+          {error && <div className="error-banner">{error}</div>}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Company *</label>
-              <input name="company" value={form.company} onChange={set} required placeholder="Acme Inc." className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Role *</label>
-              <input name="role" value={form.role} onChange={set} required placeholder="Software Engineer" className={inputCls} />
-            </div>
+          <div className="field">
+            <label>Company</label>
+            <input ref={firstRef} name="company" value={form.company} onChange={set} required placeholder="e.g. Acme Inc." />
+          </div>
+          <div className="field">
+            <label>Role</label>
+            <input name="role" value={form.role} onChange={set} required placeholder="e.g. Software Engineer" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Status</label>
-              <select name="status" value={form.status} onChange={set} className={inputCls}>
+          <div className="field-row">
+            <div className="field">
+              <label>Status</label>
+              <select name="status" value={form.status} onChange={set}>
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Date Applied</label>
-              <input type="date" name="date_applied" value={form.date_applied} onChange={set} className={inputCls} />
+            <div className="field">
+              <label>Date applied</label>
+              <input type="date" name="date_applied" value={form.date_applied} onChange={set} />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Deadline</label>
-              <input type="date" name="deadline" value={form.deadline} onChange={set} className={inputCls} />
+          <div className="field-row">
+            <div className="field">
+              <label>Salary min ($)</label>
+              <input type="number" name="salary_min" value={form.salary_min} onChange={set} placeholder="80000" min="0" />
             </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Job URL</label>
-              <input name="url" value={form.url} onChange={set} placeholder="https://..." className={inputCls} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Salary Min ($)</label>
-              <input type="number" name="salary_min" value={form.salary_min} onChange={set} placeholder="80000" min="0" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Salary Max ($)</label>
-              <input type="number" name="salary_max" value={form.salary_max} onChange={set} placeholder="120000" min="0" className={inputCls} />
+            <div className="field">
+              <label>Salary max ($)</label>
+              <input type="number" name="salary_max" value={form.salary_max} onChange={set} placeholder="120000" min="0" />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Notes</label>
-            <textarea
-              name="notes"
-              value={form.notes}
-              onChange={set}
-              rows={3}
-              placeholder="Referral from Jane, hybrid role, good benefits..."
-              className={`${inputCls} resize-none`}
-            />
+          <div className="field-row">
+            <div className="field">
+              <label>Job URL</label>
+              <input name="url" value={form.url} onChange={set} placeholder="https://..." />
+            </div>
+            <div className="field">
+              <label>Deadline</label>
+              <input type="date" name="deadline" value={form.deadline} onChange={set} />
+            </div>
           </div>
+        </div>
 
-          <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium py-2 rounded-lg transition-colors text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white font-medium py-2 rounded-lg transition-colors text-sm"
-            >
-              {loading ? 'Adding...' : 'Add Job'}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="modal-ft">
+          <button type="button" className="btn" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn btn-primary" disabled={!canSubmit || loading}>
+            {loading ? 'Adding...' : 'Add job'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

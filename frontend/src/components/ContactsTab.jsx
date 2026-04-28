@@ -1,28 +1,28 @@
 import { useState, useEffect } from 'react'
 import client from '../api/client'
 
+const PlusIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+)
+
 const OUTREACH_METHODS = ['LinkedIn', 'Email', 'Phone', 'Referral', 'Other']
 
 const RESPONSE_STATUSES = [
-  { value: 'no_response',    label: 'No Response',    color: 'text-gray-400'  },
-  { value: 'responded',      label: 'Responded',      color: 'text-blue-400'  },
-  { value: 'scheduled',      label: 'Scheduled',      color: 'text-green-400' },
-  { value: 'not_interested', label: 'Not Interested', color: 'text-red-400'   },
+  { value: 'no_response',    label: 'No Response',    color: 'var(--text-3)'      },
+  { value: 'responded',      label: 'Responded',      color: 'var(--c-applied)'   },
+  { value: 'scheduled',      label: 'Scheduled',      color: 'var(--c-offer)'     },
+  { value: 'not_interested', label: 'Not Interested', color: 'var(--c-rejected)'  },
 ]
 
-const inputCls =
-  'w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500'
-
-const EMPTY_FORM = {
-  name: '', role: '', outreach_method: 'LinkedIn',
-  outreach_date: '', response_status: 'no_response', notes: '',
-}
+const EMPTY = { name: '', role: '', outreach_method: 'LinkedIn', outreach_date: '', response_status: 'no_response', notes: '' }
 
 export default function ContactsTab({ jobId }) {
   const [contacts, setContacts] = useState([])
   const [loading, setLoading]   = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm]         = useState(EMPTY_FORM)
+  const [form, setForm]         = useState(EMPTY)
   const [saving, setSaving]     = useState(false)
 
   useEffect(() => {
@@ -32,9 +32,7 @@ export default function ContactsTab({ jobId }) {
       .finally(() => setLoading(false))
   }, [jobId])
 
-  function set(e) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
-  }
+  function set(e) { setForm(prev => ({ ...prev, [e.target.name]: e.target.value })) }
 
   async function handleAdd(e) {
     e.preventDefault()
@@ -49,104 +47,86 @@ export default function ContactsTab({ jobId }) {
         notes:         form.notes         || null,
       })
       setContacts(prev => [...prev, data])
-      setForm(EMPTY_FORM)
-      setShowForm(false)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setSaving(false)
-    }
+      setForm(EMPTY); setShowForm(false)
+    } catch (err) { console.error(err) }
+    finally { setSaving(false) }
   }
 
-  async function handleDelete(contactId) {
-    await client.delete(`/jobs/${jobId}/contacts/${contactId}`)
-    setContacts(prev => prev.filter(c => c.id !== contactId))
+  async function handleDelete(id) {
+    await client.delete(`/jobs/${jobId}/contacts/${id}`)
+    setContacts(prev => prev.filter(c => c.id !== id))
   }
 
-  if (loading) {
-    return <div className="text-gray-500 text-sm text-center py-8">Loading...</div>
-  }
+  if (loading) return <div style={{ color: 'var(--text-4)', fontSize: 12, textAlign: 'center', padding: '20px 0' }}>Loading...</div>
 
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {contacts.length === 0 && !showForm && (
-        <p className="text-gray-600 text-sm text-center py-6">No contacts yet.</p>
+        <div style={{ color: 'var(--text-4)', fontSize: 12, textAlign: 'center', padding: '16px 0' }}>No contacts yet.</div>
       )}
 
-      {contacts.map(contact => {
-        const statusMeta = RESPONSE_STATUSES.find(s => s.value === contact.response_status)
+      {contacts.map(c => {
+        const status = RESPONSE_STATUSES.find(s => s.value === c.response_status)
         return (
-          <div key={contact.id} className="bg-gray-700/40 rounded-lg px-4 py-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-sm font-medium text-white">{contact.name}</div>
-              <div className="text-xs text-gray-400 mt-0.5">
-                {contact.role && <span>{contact.role} · </span>}
-                <span>{contact.outreach_method}</span>
-                {contact.outreach_date && (
-                  <span> · {new Date(contact.outreach_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+          <div key={c.id} className="sub-item">
+            <div className="sub-item-body">
+              <div className="sub-item-title">{c.name}</div>
+              <div className="sub-item-meta">
+                {c.role && <span>{c.role} · </span>}
+                <span>{c.outreach_method}</span>
+                {c.outreach_date && (
+                  <span> · {new Date(c.outreach_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 )}
               </div>
-              {statusMeta && (
-                <div className={`text-xs mt-1 ${statusMeta.color}`}>{statusMeta.label}</div>
+              {status && (
+                <div className="sub-item-badge" style={{ color: status.color }}>{status.label}</div>
               )}
             </div>
-            <button
-              onClick={() => handleDelete(contact.id)}
-              className="text-gray-600 hover:text-red-400 text-xs transition-colors shrink-0 mt-0.5"
-            >
-              ✕
-            </button>
+            <button className="sub-item-delete" onClick={() => handleDelete(c.id)}>✕</button>
           </div>
         )
       })}
 
       {showForm ? (
-        <form onSubmit={handleAdd} className="bg-gray-700/30 rounded-lg p-4 space-y-3 border border-gray-600/50">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Name *</label>
-              <input name="name" value={form.name} onChange={set} required placeholder="Jane Smith" className={inputCls} />
+        <form className="sub-form" onSubmit={handleAdd}>
+          <div className="field-row">
+            <div className="field">
+              <label>Name *</label>
+              <input name="name" value={form.name} onChange={set} required placeholder="Jane Smith" />
             </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Their Role</label>
-              <input name="role" value={form.role} onChange={set} placeholder="Recruiter" className={inputCls} />
+            <div className="field">
+              <label>Their role</label>
+              <input name="role" value={form.role} onChange={set} placeholder="Recruiter" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Outreach Method *</label>
-              <select name="outreach_method" value={form.outreach_method} onChange={set} className={inputCls}>
+          <div className="field-row">
+            <div className="field">
+              <label>Method *</label>
+              <select name="outreach_method" value={form.outreach_method} onChange={set}>
                 {OUTREACH_METHODS.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Date</label>
-              <input type="date" name="outreach_date" value={form.outreach_date} onChange={set} className={inputCls} />
+            <div className="field">
+              <label>Date</label>
+              <input type="date" name="outreach_date" value={form.outreach_date} onChange={set} />
             </div>
           </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Response Status</label>
-            <select name="response_status" value={form.response_status} onChange={set} className={inputCls}>
+          <div className="field">
+            <label>Response</label>
+            <select name="response_status" value={form.response_status} onChange={set}>
               {RESPONSE_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
-          <div className="flex gap-2 pt-1">
-            <button type="button" onClick={() => { setShowForm(false); setForm(EMPTY_FORM) }}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm py-1.5 rounded-lg transition-colors">
-              Cancel
-            </button>
-            <button type="submit" disabled={saving}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white text-sm py-1.5 rounded-lg transition-colors">
-              {saving ? 'Saving...' : 'Add Contact'}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="button" className="btn" onClick={() => { setShowForm(false); setForm(EMPTY) }}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={saving} style={{ flex: 1 }}>
+              {saving ? 'Saving...' : 'Add contact'}
             </button>
           </div>
         </form>
       ) : (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full border border-dashed border-gray-700 hover:border-gray-500 text-gray-600 hover:text-gray-300 text-sm py-2.5 rounded-lg transition-colors"
-        >
-          + Add Contact
+        <button className="sub-add-btn" onClick={() => setShowForm(true)}>
+          <PlusIcon/> Add contact
         </button>
       )}
     </div>
