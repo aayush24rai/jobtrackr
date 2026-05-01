@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import client from '../api/client'
+import DatePicker from './DatePicker'
 
 const PlusIcon = () => (
   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -92,7 +93,7 @@ export default function InterviewsTab({ jobId }) {
             </div>
             <div className="field">
               <label>Date</label>
-              <input type="date" name="scheduled_date" value={form.scheduled_date} onChange={set} />
+              <DatePicker name="scheduled_date" value={form.scheduled_date} onChange={set} />
             </div>
           </div>
           <div className="field">

@@ -5,6 +5,7 @@ import StatsBar from '../components/StatsBar'
 import KanbanBoard from '../components/KanbanBoard'
 import AddJobModal from '../components/AddJobModal'
 import JobDetailModal from '../components/JobDetailModal'
+import JobDrawer from '../components/JobDrawer'
 
 // ── Icons ────────────────────────────────────────────────────────────
 const PlusIcon = () => (
@@ -106,6 +107,7 @@ export default function Dashboard() {
   const [loading, setLoading]       = useState(true)
   const [addStatus, setAddStatus]   = useState(null)  // column id that triggered Add, or null
   const [selectedJob, setSelectedJob] = useState(null)
+  const [openJobId, setOpenJobId]   = useState(null)
 
   useEffect(() => {
     client.get('/jobs/')
@@ -136,8 +138,10 @@ export default function Dashboard() {
     await client.delete(`/jobs/${jobId}`)
   }
 
+  const openJob = openJobId ? (jobs.find(j => j.id === openJobId) ?? null) : null
+
   return (
-    <div className="app">
+    <div className={`app${openJob ? ' drawer-open' : ''}`}>
       <TopBar user={user} onLogout={logout} onAddJob={() => setAddStatus('Wishlist')} />
       <StatsBar jobs={jobs} />
       <BoardToolbar jobs={jobs} />
@@ -150,7 +154,7 @@ export default function Dashboard() {
         <KanbanBoard
           jobs={jobs}
           onStatusChange={handleStatusChange}
-          onCardClick={setSelectedJob}
+          onCardClick={j => setOpenJobId(j.id)}
           onAddTo={setAddStatus}
         />
       )}
@@ -169,6 +173,14 @@ export default function Dashboard() {
           onClose={() => setSelectedJob(null)}
           onSave={handleUpdateJob}
           onDelete={handleDelete}
+        />
+      )}
+
+      {openJob && (
+        <JobDrawer
+          job={openJob}
+          onClose={() => setOpenJobId(null)}
+          onEdit={job => { setOpenJobId(null); setSelectedJob(job) }}
         />
       )}
     </div>

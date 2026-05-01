@@ -30,7 +30,7 @@ app = FastAPI(
 # CORS - controls which frontend origins can call this API
 # in production replcae localhost with vercel URL!
 origins = [
-    "http://loaclhost:5173",    # vite dev server
+    "http://localhost:5173",     # vite dev server
     "http://localhost:3000",    # fallback in case using a different port
 ]
 

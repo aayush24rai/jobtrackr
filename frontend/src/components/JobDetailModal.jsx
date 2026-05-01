@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ContactsTab from './ContactsTab'
 import InterviewsTab from './InterviewsTab'
+import DatePicker from './DatePicker'
 
 const CloseIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -111,7 +112,7 @@ export default function JobDetailModal({ job, onClose, onSave, onDelete }) {
                 </div>
                 <div className="field">
                   <label>Date applied</label>
-                  <input type="date" name="date_applied" value={form.date_applied} onChange={set} />
+                  <DatePicker name="date_applied" value={form.date_applied} onChange={set} />
                 </div>
               </div>
 
@@ -133,7 +134,7 @@ export default function JobDetailModal({ job, onClose, onSave, onDelete }) {
                 </div>
                 <div className="field">
                   <label>Deadline</label>
-                  <input type="date" name="deadline" value={form.deadline} onChange={set} />
+                  <DatePicker name="deadline" value={form.deadline} onChange={set} />
                 </div>
               </div>
 
