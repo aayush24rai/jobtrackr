@@ -74,8 +74,8 @@ export default function AddJobModal({ initialStatus, onClose, onAdd }) {
           </div>
 
           <div className="field">
-            <label>Location</label>
-            <input name="location" value={form.location} onChange={set} placeholder="e.g. Remote, New York, NY" />
+            <label>Job URL</label>
+            <input name="url" value={form.url} onChange={set} placeholder="https://..." />
           </div>
 
           <div className="field-row">
@@ -104,8 +104,8 @@ export default function AddJobModal({ initialStatus, onClose, onAdd }) {
 
           <div className="field-row">
             <div className="field">
-              <label>Job URL</label>
-              <input name="url" value={form.url} onChange={set} placeholder="https://..." />
+              <label>Location</label>
+              <input name="location" value={form.location} onChange={set} placeholder="e.g. Remote, New York, NY" />
             </div>
             <div className="field">
               <label>Deadline</label>

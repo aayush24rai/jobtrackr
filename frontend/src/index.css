@@ -558,6 +558,7 @@ html, body {
   resize: none; line-height: 1.5;
 }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-row .field-full { grid-column: 1 / -1; }
 
 .modal-ft {
   padding: 12px 18px;

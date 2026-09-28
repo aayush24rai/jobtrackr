@@ -104,9 +104,9 @@ export default function JobDetailModal({ job, onClose, onSave, onDelete }) {
                   <input name="role" value={form.role} onChange={set} required />
                 </div>
 
-                <div className="field">
-                  <label>Location</label>
-                  <input name="location" value={form.location} onChange={set} placeholder="e.g. Remote, New York, NY" />
+                <div className="field field-full">
+                  <label>Job URL</label>
+                  <input name="url" value={form.url} onChange={set} placeholder="https://..." />
                 </div>
               </div>
 
@@ -136,8 +136,8 @@ export default function JobDetailModal({ job, onClose, onSave, onDelete }) {
 
               <div className="field-row">
                 <div className="field">
-                  <label>Job URL</label>
-                  <input name="url" value={form.url} onChange={set} placeholder="https://..." />
+                  <label>Location</label>
+                  <input name="location" value={form.location} onChange={set} placeholder="e.g. Remote, New York, NY" />
                 </div>
                 <div className="field">
                   <label>Deadline</label>
