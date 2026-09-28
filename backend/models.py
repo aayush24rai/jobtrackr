@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -39,6 +39,10 @@ class Job(Base):
 
     salary_min = Column(Integer, nullable=True)
     salary_max = Column(Integer, nullable=True)
+
+    # when the job was added - set by the database, used by the Insights view
+    # nullable because jobs created before this column existed may not have one
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
 
     owner = relationship("User", back_populates="jobs")
 

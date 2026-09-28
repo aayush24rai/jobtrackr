@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from slowapi.errors import RateLimitExceeded
 
 from migrate import run_migrations
-from routes import users, jobs
+from routes import users, jobs, overview
 from limiter import limiter, rate_limit_exceeded_handler
 
 # the lifespan function runs on startup and shutdown
@@ -57,6 +57,7 @@ app.add_middleware(
 # tags group endpoints in the auto-generated docs at /docs
 app.include_router(users.router, prefix="/auth", tags=["auth"])
 app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
+app.include_router(overview.router, tags=["overview"])
 
 
 # health check - Railway and other platforms ping this to verify the app is running 
