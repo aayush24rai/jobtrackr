@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import client from '../api/client'
+import client, { getErrorMessage } from '../api/client'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
@@ -28,7 +28,7 @@ export default function Signup() {
       navigate('/')
     } catch (err) {
       localStorage.removeItem('access_token')
-      setError(err.response?.data?.detail || 'Sign up failed. Please try again.')
+      setError(getErrorMessage(err, 'Sign up failed. Please try again.'))
     } finally {
       setLoading(false)
     }

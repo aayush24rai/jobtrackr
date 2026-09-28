@@ -66,3 +66,15 @@ client.interceptors.response.use(
 )
 
 export default client
+
+// turn an axios error into a message that's safe to render
+// FastAPI sends detail as a string for our own errors, but as a list of
+// {loc, msg} objects when request validation fails (e.g. "name@gmail")
+export function getErrorMessage(err, fallback) {
+  const detail = err.response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail) && detail.length > 0) {
+    return detail.map((d) => d.msg).join('. ')
+  }
+  return fallback
+}

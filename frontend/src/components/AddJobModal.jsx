@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import DatePicker from './DatePicker'
+import { getErrorMessage } from '../api/client'
 
 const CloseIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -46,7 +47,7 @@ export default function AddJobModal({ initialStatus, onClose, onAdd }) {
         notes:        form.notes        || null,
       })
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to add job.')
+      setError(getErrorMessage(err, 'Failed to add job.'))
       setLoading(false)
     }
   }
