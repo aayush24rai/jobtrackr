@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
+import Landing from './pages/Landing'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -22,17 +23,18 @@ function PrivateRoute({ children }) {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route
-        path="/"
+        path="/board"
         element={
           <PrivateRoute>
             <Dashboard />
           </PrivateRoute>
         }
       />
-      {/* Catch-all — unknown paths fall back to dashboard (PrivateRoute handles auth) */}
+      {/* Catch-all — unknown paths fall back to the landing page */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

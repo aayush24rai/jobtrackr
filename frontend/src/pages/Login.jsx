@@ -21,7 +21,7 @@ export default function Login() {
       localStorage.setItem('access_token', tokens.access_token)
       const { data: user } = await client.get('/auth/me')
       login(tokens, user)
-      navigate('/')
+      navigate('/board')
     } catch (err) {
       localStorage.removeItem('access_token')
       setError(getErrorMessage(err, 'Login failed. Please try again.'))
