@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import client from '../api/client'
 import StatsBar from '../components/StatsBar'
@@ -7,6 +8,24 @@ import AddJobModal from '../components/AddJobModal'
 import JobDetailModal from '../components/JobDetailModal'
 import JobDrawer from '../components/JobDrawer'
 import ChangePasswordModal from '../components/ChangePasswordModal'
+import CalendarView from '../components/CalendarView'
+import InsightsView from '../components/InsightsView'
+
+const VIEWS = ['Board', 'Calendar', 'Insights']
+const VIEW_KEY = 'jt-view'
+
+// localStorage can throw (private mode, blocked storage) - treat that as "nothing saved"
+function readSavedView() {
+  try {
+    const v = localStorage.getItem(VIEW_KEY)
+    return VIEWS.includes(v) ? v : null
+  } catch {
+    return null
+  }
+}
+function saveView(v) {
+  try { localStorage.setItem(VIEW_KEY, v) } catch { /* not persisted, still switches */ }
+}
 
 // ── Icons ────────────────────────────────────────────────────────────
 const PlusIcon = () => (
@@ -17,12 +36,6 @@ const PlusIcon = () => (
 const BellIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8Z"/><path d="M10 21a2 2 0 0 0 4 0"/>
-  </svg>
-)
-const GroupIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
   </svg>
 )
 
@@ -93,17 +106,29 @@ function ProfileMenu({ user, onLogout, onChangePassword }) {
 }
 
 // ── TopBar ───────────────────────────────────────────────────────────
-function TopBar({ user, onLogout, onChangePassword, onAddJob }) {
+function TopBar({ user, view, onViewChange, onLogout, onChangePassword, onAddJob }) {
 
   return (
     <div className="topbar">
-      <div className="brand">
+      <Link to="/" className="brand" style={{ color: 'inherit', textDecoration: 'none' }} title="JobTrackr home">
         <div className="brand-mark">J</div>
         JobTrackr
-      </div>
+      </Link>
 
-      <div className="topbar-tabs">
-        <div className="tab active">Board</div>
+      <div className="topbar-tabs" role="tablist">
+        {VIEWS.map(v => (
+          <div
+            key={v}
+            className={`tab${view === v ? ' active' : ''}`}
+            role="tab"
+            tabIndex={0}
+            aria-selected={view === v}
+            onClick={() => onViewChange(v)}
+            onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onViewChange(v)}
+          >
+            {v}
+          </div>
+        ))}
       </div>
 
       <div className="topbar-spacer"/>
@@ -140,7 +165,6 @@ function BoardToolbar({ jobs }) {
 
   return (
     <div className="board-toolbar">
-      <div className="chip active"><GroupIcon/> Board</div>
       <div className="topbar-spacer"/>
       {interviewsThisWeek > 0 && (
         <div className="legend">
@@ -169,6 +193,21 @@ export default function Dashboard() {
   const [selectedJob, setSelectedJob] = useState(null)
   const [openJobId, setOpenJobId]   = useState(null)
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [contacts, setContacts]     = useState([])
+  const [interviews, setInterviews] = useState([])
+
+  // ?view= overrides the saved view without being saved itself
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlView = VIEWS.includes(searchParams.get('view')) ? searchParams.get('view') : null
+  const [savedView, setSavedView] = useState(() => readSavedView() ?? 'Board')
+  const view = urlView ?? savedView
+
+  function handleViewChange(v) {
+    setSavedView(v)
+    saveView(v)
+    // a tab click is an explicit choice, so drop the override from the URL
+    if (urlView) setSearchParams(prev => { prev.delete('view'); return prev }, { replace: true })
+  }
 
   useEffect(() => {
     client.get('/jobs/')
@@ -176,6 +215,14 @@ export default function Dashboard() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
+
+  // All contacts and interviews, for Calendar and Insights. The drawer and
+  // edit modal change these, so reload when either closes.
+  const loadActivity = useCallback(() => {
+    client.get('/contacts').then(res => setContacts(res.data)).catch(console.error)
+    client.get('/interviews').then(res => setInterviews(res.data)).catch(console.error)
+  }, [])
+  useEffect(() => { loadActivity() }, [loadActivity])
 
   async function handleAddJob(jobData) {
     const { data: newJob } = await client.post('/jobs/', jobData)
@@ -192,10 +239,14 @@ export default function Dashboard() {
     const { data: updated } = await client.patch(`/jobs/${jobId}`, updates)
     setJobs(prev => prev.map(j => j.id === jobId ? updated : j))
     setSelectedJob(null)
+    loadActivity()   // the modal's Contacts/Interviews tabs may have changed things
   }
 
   async function handleDelete(jobId) {
     setJobs(prev => prev.filter(j => j.id !== jobId))
+    // deleting a job deletes its contacts and interviews too
+    setContacts(prev => prev.filter(c => c.job_id !== jobId))
+    setInterviews(prev => prev.filter(i => i.job_id !== jobId))
     await client.delete(`/jobs/${jobId}`)
   }
 
@@ -205,17 +256,23 @@ export default function Dashboard() {
     <div className={`app${openJob ? ' drawer-open' : ''}`}>
       <TopBar
         user={user}
+        view={view}
+        onViewChange={handleViewChange}
         onLogout={logout}
         onChangePassword={() => setShowChangePassword(true)}
         onAddJob={() => setAddStatus('Wishlist')}
       />
       <StatsBar jobs={jobs} />
-      <BoardToolbar jobs={jobs} />
+      {view === 'Board' && <BoardToolbar jobs={jobs} />}
 
       {loading ? (
         <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: 'var(--text-4)', fontSize: 13 }}>
           Loading your jobs…
         </div>
+      ) : view === 'Calendar' ? (
+        <CalendarView jobs={jobs} contacts={contacts} interviews={interviews} onOpen={j => setOpenJobId(j.id)} />
+      ) : view === 'Insights' ? (
+        <InsightsView jobs={jobs} contacts={contacts} interviews={interviews} />
       ) : (
         <KanbanBoard
           jobs={jobs}
@@ -236,7 +293,7 @@ export default function Dashboard() {
       {selectedJob && (
         <JobDetailModal
           job={selectedJob}
-          onClose={() => setSelectedJob(null)}
+          onClose={() => { setSelectedJob(null); loadActivity() }}
           onSave={handleUpdateJob}
           onDelete={handleDelete}
         />
@@ -245,7 +302,7 @@ export default function Dashboard() {
       {openJob && (
         <JobDrawer
           job={openJob}
-          onClose={() => setOpenJobId(null)}
+          onClose={() => { setOpenJobId(null); loadActivity() }}
           onEdit={job => { setOpenJobId(null); setSelectedJob(job) }}
         />
       )}
