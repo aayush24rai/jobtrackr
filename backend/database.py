@@ -8,6 +8,11 @@ load_dotenv()
 
 # read the DB URL from env
 DATABASE_URL = os.getenv("DATABASE_URL")
+assert DATABASE_URL, "DATABASE_URL environment variable is not set"
+
+# some hosts hand out postgres:// URLs, but SQLAlchemy 2 only accepts postgresql://
+if DATABASE_URL.startswith("postgres://"):
+	DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # the engine is the actual PostgreSQL connection
 # pool_pre_ping=True means that SQLAlchemy checkls if a connection is still alive before using it - preventing errors after the DB goes idle

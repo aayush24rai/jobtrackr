@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -28,10 +30,12 @@ app = FastAPI(
 
 
 # CORS - controls which frontend origins can call this API
-# in production replcae localhost with vercel URL!
+# comma-separated list from env so the Vercel URL can change without a code edit
+# e.g. ALLOWED_ORIGINS=https://jobtrackr.vercel.app,http://localhost:5173
 origins = [
-    "http://localhost:5173",     # vite dev server
-    "http://localhost:3000",    # fallback in case using a different port
+    origin.strip().rstrip("/")
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    if origin.strip()
 ]
 
 
@@ -51,6 +55,6 @@ app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 
 
 # health check - Railway and other platforms ping this to verify the app is running 
-@app.get("/heatlh")
+@app.get("/health")
 def health_check():
     return {"status": "ok"}
