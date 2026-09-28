@@ -7,8 +7,9 @@ import './Landing.css'
 const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_064122_c4750c0e-7476-4b44-94a2-a85a65c63bf2.mp4'
 const DASHBOARD = '/board'
 
-// the mockup is laid out at this size and scaled to fit the window frame
-const SHOT_W = 1440
+// the mockup is laid out at least this wide and scaled down to fit narrower
+// frames; wider frames lay it out at their real width instead of scaling up
+const SHOT_MIN_W = 1440
 const SHOT_VISIBLE_H = 780
 
 // ── Icons ────────────────────────────────────────────────────────────
@@ -76,12 +77,15 @@ const noop = () => {}
 // (it lives inside Dashboard.jsx) using the same dashboard classes.
 function BoardPreview() {
   const shotRef = useRef(null)
-  const [scale, setScale] = useState(1)
+  const [layout, setLayout] = useState({ width: SHOT_MIN_W, scale: 1 })
   const [jobs] = useState(sampleJobs)
 
   useLayoutEffect(() => {
     const el = shotRef.current
-    const fit = () => setScale(el.clientWidth / SHOT_W)
+    const fit = () => {
+      const width = Math.max(SHOT_MIN_W, el.clientWidth)
+      setLayout({ width, scale: el.clientWidth / width })
+    }
     fit()
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -89,8 +93,8 @@ function BoardPreview() {
   }, [])
 
   return (
-    <div className="lp-shot" ref={shotRef} style={{ height: Math.round(SHOT_VISIBLE_H * scale) }}>
-      <div className="lp-shot-inner" style={{ transform: `scale(${scale})` }} inert aria-hidden="true">
+    <div className="lp-shot" ref={shotRef} style={{ height: Math.round(SHOT_VISIBLE_H * layout.scale) }}>
+      <div className="lp-shot-inner" style={{ width: layout.width, transform: `scale(${layout.scale})` }} inert aria-hidden="true">
         <div className="app" style={{ minHeight: '100%' }}>
           <div className="topbar">
             <div className="brand"><div className="brand-mark">J</div>JobTrackr</div>
