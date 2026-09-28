@@ -7,9 +7,8 @@ import './Landing.css'
 const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_064122_c4750c0e-7476-4b44-94a2-a85a65c63bf2.mp4'
 const DASHBOARD = '/board'
 
-// the mockup is laid out at least this wide and scaled down to fit narrower
-// frames; wider frames lay it out at their real width instead of scaling up
-const SHOT_MIN_W = 1440
+// the mockup is laid out at this size and scaled to fit the window frame
+const SHOT_W = 1440
 const SHOT_VISIBLE_H = 780
 
 // ── Icons ────────────────────────────────────────────────────────────
@@ -26,11 +25,6 @@ const Chevron = () => (
 const MenuIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
     <path d="M4 6h16M4 12h16M4 18h16"/>
-  </svg>
-)
-const SearchIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-    <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
   </svg>
 )
 const PlusIcon = () => (
@@ -77,15 +71,12 @@ const noop = () => {}
 // (it lives inside Dashboard.jsx) using the same dashboard classes.
 function BoardPreview() {
   const shotRef = useRef(null)
-  const [layout, setLayout] = useState({ width: SHOT_MIN_W, scale: 1 })
+  const [scale, setScale] = useState(1)
   const [jobs] = useState(sampleJobs)
 
   useLayoutEffect(() => {
     const el = shotRef.current
-    const fit = () => {
-      const width = Math.max(SHOT_MIN_W, el.clientWidth)
-      setLayout({ width, scale: el.clientWidth / width })
-    }
+    const fit = () => setScale(el.clientWidth / SHOT_W)
     fit()
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -93,8 +84,8 @@ function BoardPreview() {
   }, [])
 
   return (
-    <div className="lp-shot" ref={shotRef} style={{ height: Math.round(SHOT_VISIBLE_H * layout.scale) }}>
-      <div className="lp-shot-inner" style={{ width: layout.width, transform: `scale(${layout.scale})` }} inert aria-hidden="true">
+    <div className="lp-shot" ref={shotRef} style={{ height: Math.round(SHOT_VISIBLE_H * scale) }}>
+      <div className="lp-shot-inner" style={{ transform: `scale(${scale})` }} inert aria-hidden="true">
         <div className="app" style={{ minHeight: '100%' }}>
           <div className="topbar">
             <div className="brand"><div className="brand-mark">J</div>JobTrackr</div>
@@ -117,13 +108,6 @@ function BoardPreview() {
 }
 
 // ── Page ─────────────────────────────────────────────────────────────
-function menubarDate() {
-  const now = new Date()
-  const day = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '')
-  const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  return `${day} ${time}`
-}
-
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
@@ -134,7 +118,6 @@ export default function Landing() {
   const rootRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [reducedMotion] = useState(prefersReducedMotion)
-  const [dateLabel] = useState(menubarDate)
 
   useEffect(() => {
     const prev = document.title
@@ -173,7 +156,6 @@ export default function Landing() {
       <div className="lp-bg">
         <video src={VIDEO_SRC} autoPlay={!reducedMotion} loop muted playsInline preload="metadata"/>
       </div>
-      <div className="lp-guide l"/><div className="lp-guide r"/>
 
       <div className="lp-content">
         <nav className="lp-nav lp-fx" style={fx(0, -10)}>
@@ -211,20 +193,6 @@ export default function Landing() {
             <small>Board, calendar, and insights in one place</small>
           </div>
         </section>
-
-        <div className="lp-menubar lp-fx" style={fx(0.9, 0)}>
-          <div className="lp-wrap">
-            <div className="lp-mb-l">
-              <LogoMark size={14}/>
-              <b>JobTrackr</b>
-              <span>File</span><span>Edit</span><span>View</span>
-              <span className="h-sm">Jobs</span>
-              <span className="h-sm h-md">Window</span>
-              <span className="h-sm h-md">Help</span>
-            </div>
-            <div className="lp-mb-r"><SearchIcon/><span>{dateLabel}</span></div>
-          </div>
-        </div>
 
         <section className="lp-mock-sec lp-wrap">
           <div className="lp-window lp-fx" style={fx(1.1, 40, 0.8)}>

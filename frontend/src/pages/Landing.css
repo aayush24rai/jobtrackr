@@ -15,24 +15,17 @@
   font-size: 16px;
   line-height: normal;
   -webkit-font-smoothing: antialiased;
-  /* side padding for the full-width layout: 24px on phones, up to 64px on wide screens */
-  --lp-gutter: clamp(24px, 4vw, 64px);
 }
 .lp ::selection, .lp::selection { background: rgba(61,129,227,.3); }
 .lp a { color: #fff; text-decoration: none; }
 .lp a:hover { color: rgba(255,255,255,.8); }
 
-/* Background video + guide lines */
+/* Background video (full screen, fixed behind everything) */
 .lp-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .lp-bg video { width: 100%; height: 100%; object-fit: cover; }
-.lp-guide { position: fixed; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.1); z-index: 5; pointer-events: none; }
-/* guides sit 24px outside the content edge, as they did around the original 1152px column */
-.lp-guide.l { left: calc(var(--lp-gutter) - 24px); }
-.lp-guide.r { right: calc(var(--lp-gutter) - 24px); }
-@media (max-width: 767px) { .lp-guide { display: none; } }
 
 .lp-content { position: relative; z-index: 10; }
-.lp-wrap { margin: 0 auto; padding: 0 var(--lp-gutter); }
+.lp-wrap { max-width: 1152px; margin: 0 auto; padding: 0 24px; }
 
 /* Liquid glass */
 .lp-glass {
@@ -149,20 +142,6 @@
 .lp-hero-cta { margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .lp-hero-cta small { font-size: 12px; color: rgba(255,255,255,.4); }
 
-/* macOS-style menu bar strip */
-.lp-menubar {
-  height: 40px; background: rgba(0,0,0,.4);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255,255,255,.1); border-bottom: 1px solid rgba(255,255,255,.1);
-}
-.lp-menubar .lp-wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
-.lp-mb-l { display: flex; align-items: center; gap: 20px; }
-.lp-mb-l b { font-weight: 700; }
-.lp-mb-l span { color: rgba(255,255,255,.8); }
-.lp-mb-r { display: flex; align-items: center; gap: 14px; color: rgba(255,255,255,.8); }
-@media (max-width: 767px) { .lp-mb-l .h-md { display: none; } }
-@media (max-width: 639px) { .lp-mb-l .h-sm { display: none; } }
-
 /* Product mockup window */
 .lp-mock-sec { padding: 96px 0; }
 @media (max-width: 767px) { .lp-mock-sec { padding: 64px 0; } }
@@ -225,11 +204,3 @@
 .lp-footer { border-top: 1px solid rgba(255,255,255,.1); padding: 32px 0 40px; }
 .lp-footer .lp-wrap { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: rgba(255,255,255,.4); }
 .lp .lp-footer a { color: rgba(255,255,255,.6); }
-
-/* Full width: the section rules above reset side padding (as in the reference),
-   which was fine inside a 1152px column. Put the sections on the guide lines,
-   24px outside the nav/menu-bar content edge, like the original layout. */
-.lp-hero, .lp-mock-sec, .lp-feat, .lp-cta-sec {
-  padding-left: calc(var(--lp-gutter) - 24px);
-  padding-right: calc(var(--lp-gutter) - 24px);
-}
