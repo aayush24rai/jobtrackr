@@ -2,6 +2,13 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import client, { getErrorMessage } from '../api/client'
+import AuthLayout, { InputGroup, PasswordGroup } from '../components/AuthLayout'
+
+const HERO_STEPS = [
+  { text: 'Your board, sorted by stage' },
+  { text: 'Interviews and follow-ups on a calendar' },
+  { text: 'Insights on what gets replies' },
+]
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -31,58 +38,35 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-white text-center mb-2">JobTrackr</h1>
-        <p className="text-gray-400 text-center mb-8">Sign in to your account</p>
+    <AuthLayout
+      heroTitle="Welcome back"
+      heroText="Your board, calendar and insights are right where you left them."
+      steps={HERO_STEPS}
+      title="Log in to JobTrackr"
+      subtitle="Enter your details to open your board."
+    >
+      <form className="au-fields" onSubmit={handleSubmit}>
+        {error && <div className="au-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="bg-gray-800 rounded-xl p-8 space-y-5 border border-gray-700">
-          {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-300 text-sm px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
+        <InputGroup
+          id="email" label="Email" type="email" placeholder="you@example.com"
+          value={email} onChange={e => setEmail(e.target.value)}
+          required autoComplete="email"
+        />
+        <PasswordGroup
+          id="password" label="Password" placeholder="••••••••"
+          value={password} onChange={e => setPassword(e.target.value)}
+          required autoComplete="current-password"
+        />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-              className="w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-500 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+        <button type="submit" className="au-submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Log in'}
+        </button>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-500 rounded-lg px-4 py-2.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-colors"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-
-          <p className="text-center text-sm text-gray-400">
-            Don&apos;t have an account?{' '}
-            <Link to="/signup" className="text-indigo-400 hover:text-indigo-300">
-              Sign up
-            </Link>
-          </p>
-        </form>
-      </div>
-    </div>
+        <p className="au-foot">
+          New to JobTrackr? <Link to="/signup">Create an account</Link>
+        </p>
+      </form>
+    </AuthLayout>
   )
 }
