@@ -27,6 +27,12 @@ class UserLogin(EmailNormalizer):
     password: str
 
 
+class ChangePassword(BaseModel):
+    current_password: str
+    # same rules as signup
+    new_password: str = Field(min_length=8, max_length=72)
+
+
 class UserResponse(BaseModel):
     id: int
     email: EmailStr

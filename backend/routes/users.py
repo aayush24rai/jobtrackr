@@ -111,6 +111,31 @@ def refresh_token(payload: dict, db: Session = Depends(get_db)):
     }
 
 
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("5/minute")    # it checks the current password, so limit guessing like login
+def change_password(
+    request: Request,
+    data: schemas.ChangePassword,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    # require the current password so someone with a stolen session can't lock the owner out
+    if not auth.verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    if data.current_password == data.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from the current one"
+        )
+
+    current_user.hashed_password = auth.hash_password(data.new_password)
+    db.commit()
+
+
 @router.get("/me", response_model=schemas.UserResponse)
 def get_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
