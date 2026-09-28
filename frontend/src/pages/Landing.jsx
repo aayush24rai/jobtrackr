@@ -116,6 +116,7 @@ const fx = (d, y, t) => ({ '--d': `${d}s`, ...(y !== undefined && { '--y': `${y}
 
 export default function Landing() {
   const rootRef = useRef(null)
+  const scrimRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [reducedMotion] = useState(prefersReducedMotion)
 
@@ -123,6 +124,19 @@ export default function Landing() {
     const prev = document.title
     document.title = 'JobTrackr: your job search, organized'
     return () => { document.title = prev }
+  }, [])
+
+  // darken the background video as the page scrolls past the hero, from 0 at
+  // the top to SCRIM_MAX after SCRIM_RAMP px. Written straight to the DOM to
+  // avoid re-rendering on every scroll event.
+  useEffect(() => {
+    const SCRIM_MAX = 0.75, SCRIM_RAMP = 500
+    const update = () => {
+      scrimRef.current.style.opacity = String(Math.min(window.scrollY / SCRIM_RAMP, 1) * SCRIM_MAX)
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
   }, [])
 
   // fade sections up as they scroll into view
@@ -156,6 +170,7 @@ export default function Landing() {
       <div className="lp-bg">
         <video src={VIDEO_SRC} autoPlay={!reducedMotion} loop muted playsInline preload="metadata"/>
       </div>
+      <div className="lp-scrim" ref={scrimRef}/>
 
       <div className="lp-content">
         <nav className="lp-nav lp-fx" style={fx(0, -10)}>
