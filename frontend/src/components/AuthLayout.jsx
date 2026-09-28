@@ -1,6 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './AuthLayout.css'
+
+// same video as the landing page background
+const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_064122_c4750c0e-7476-4b44-94a2-a85a65c63bf2.mp4'
+const HERO_QUERY = '(min-width: 1024px)'   // the hero panel is hidden below this
+
+// true while the media query matches; used so phones never download the video
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => window.matchMedia?.(query).matches ?? false)
+  useEffect(() => {
+    const mq = window.matchMedia?.(query)
+    if (!mq) return
+    const onChange = e => setMatches(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [query])
+  return matches
+}
 
 const LogoMark = ({ size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="#fff" aria-hidden="true">
@@ -31,9 +48,15 @@ const Brand = ({ className = '' }) => (
 
 // Two-column shell shared by Login and Signup
 export default function AuthLayout({ heroTitle, heroText, steps, title, subtitle, children }) {
+  const showHero = useMediaQuery(HERO_QUERY)
+  const [reducedMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false)
+
   return (
     <main className="au">
       <section className="au-hero">
+        {showHero && (
+          <video src={VIDEO_SRC} autoPlay={!reducedMotion} loop muted playsInline preload="metadata" aria-hidden="true"/>
+        )}
         <div className="au-hero-inner">
           <div className="au-rise" style={{ '--d': '.2s' }}><Brand/></div>
           <div className="au-rise" style={{ '--d': '.35s' }}>
