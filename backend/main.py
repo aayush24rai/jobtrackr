@@ -5,19 +5,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from slowapi.errors import RateLimitExceeded
 
-from database import engine
-from models import Base
+from migrate import run_migrations
 from routes import users, jobs
 from limiter import limiter, rate_limit_exceeded_handler
 
 # the lifespan function runs on startup and shutdown
-# creating tables here means they're always ready before requests come in
+# running migrations here means the schema is always up to date before requests come in
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    #startup - create all tables if they don't exist yet
-    # this is safe to call repeatedly as it won't overwrite existing tables
-    Base.metadata.create_all(bind=engine)
+    # startup - apply any database migrations that haven't run yet
+    # (Alembic tracks which ones have run in the alembic_version table)
+    run_migrations()
     yield
 
     #shutdown - nothing to clean up for now
