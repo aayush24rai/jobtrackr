@@ -1,9 +1,17 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import date 
 
 # USER SCHEMAS ---------------------------
-class UserCreate(BaseModel):
+class EmailNormalizer(BaseModel):
+    # lowercase + trim so Test@x.com and test@x.com are the same account
+    @field_validator("email", mode="after", check_fields=False)
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+
+class UserCreate(EmailNormalizer):
     
     # EmailStr valdiates it's a real email format
     email: EmailStr
@@ -12,7 +20,7 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=8, max_length=72)
 
 
-class UserLogin(BaseModel):
+class UserLogin(EmailNormalizer):
     # no length rules on login - otherwise we'd leak the password policy
     # and lock out anyone who signed up before it existed
     email: EmailStr

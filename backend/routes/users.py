@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -16,7 +17,7 @@ def signup(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
 
     # check if emaiul is already registered
     existing_user = db.query(models.User).filter(
-        models.User.email == user_data.email
+        func.lower(models.User.email) == user_data.email
     ).first()
 
     if existing_user:
@@ -59,7 +60,7 @@ def login(user_data: schemas.UserLogin, db: Session = Depends(get_db)):
 
     # look up user by email
     user = db.query(models.User).filter(
-        models.User.email == user_data.email
+        func.lower(models.User.email) == user_data.email
     ).first()
 
     #verify pwd - we use the same error for both "user not found" and "wrong pwd" intentionally so attackerrs don't know which one failed
