@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import date 
 
@@ -6,6 +6,15 @@ from datetime import date
 class UserCreate(BaseModel):
     
     # EmailStr valdiates it's a real email format
+    email: EmailStr
+    # enforced here too - the frontend check alone can be bypassed
+    # max_length because bcrypt only uses the first 72 bytes anyway
+    password: str = Field(min_length=8, max_length=72)
+
+
+class UserLogin(BaseModel):
+    # no length rules on login - otherwise we'd leak the password policy
+    # and lock out anyone who signed up before it existed
     email: EmailStr
     password: str
 

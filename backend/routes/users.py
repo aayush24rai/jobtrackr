@@ -55,7 +55,7 @@ def signup(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=schemas.Token)
-def login(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+def login(user_data: schemas.UserLogin, db: Session = Depends(get_db)):
 
     # look up user by email
     user = db.query(models.User).filter(
