@@ -119,7 +119,7 @@ export default function JobDetailModal({ job, onClose, onSave, onDelete }) {
                 </div>
                 <div className="field">
                   <label>Date applied</label>
-                  <DatePicker name="date_applied" value={form.date_applied} onChange={set} />
+                  <DatePicker name="date_applied" value={form.date_applied} onChange={set} disableFuture />
                 </div>
               </div>
 

@@ -49,7 +49,8 @@ function buildGrid(year, month) {
   })
 }
 
-export default function DatePicker({ value, onChange, name, placeholder = 'Pick a date' }) {
+// disableFuture: days after today can't be picked (e.g. date applied)
+export default function DatePicker({ value, onChange, name, placeholder = 'Pick a date', disableFuture = false }) {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const todayIso = toIso(today)
 
@@ -112,6 +113,9 @@ export default function DatePicker({ value, onChange, name, placeholder = 'Pick 
   }
 
   const cells = buildGrid(viewYear, viewMonth)
+  // no point paging into months that are entirely in the future
+  const atMaxMonth = disableFuture &&
+    (viewYear > today.getFullYear() || (viewYear === today.getFullYear() && viewMonth >= today.getMonth()))
 
   return (
     <div className="dp" ref={triggerRef}>
@@ -154,7 +158,7 @@ export default function DatePicker({ value, onChange, name, placeholder = 'Pick 
               <ChevLeft />
             </button>
             <span className="dp-month">{MONTHS[viewMonth]} {viewYear}</span>
-            <button type="button" className="dp-nav-btn" onClick={nextMonth} aria-label="Next month">
+            <button type="button" className="dp-nav-btn" onClick={nextMonth} aria-label="Next month" disabled={atMaxMonth}>
               <ChevRight />
             </button>
           </div>
@@ -164,6 +168,8 @@ export default function DatePicker({ value, onChange, name, placeholder = 'Pick 
             {cells.map((d, i) => {
               const iso     = toIso(d)
               const inMonth = d.getMonth() === viewMonth
+              // ISO strings compare correctly as plain strings
+              const blocked = disableFuture && iso > todayIso
               return (
                 <button
                   key={i}
@@ -175,7 +181,8 @@ export default function DatePicker({ value, onChange, name, placeholder = 'Pick 
                     iso === value    ? 'dp-sel'   : '',
                   ].filter(Boolean).join(' ')}
                   onClick={() => selectDay(d)}
-                  tabIndex={inMonth ? 0 : -1}
+                  disabled={blocked}
+                  tabIndex={inMonth && !blocked ? 0 : -1}
                   aria-label={fmtDisplay(iso)}
                   aria-pressed={iso === value}
                 >

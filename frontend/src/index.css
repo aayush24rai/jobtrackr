@@ -1132,3 +1132,5 @@ html, body {
 .dp-day.dp-sel              { background: var(--text); color: var(--bg); font-weight: 600; }
 .dp-day.dp-sel:hover        { background: oklch(0.88 0.005 260); }
 .dp-day.dp-today.dp-sel     { background: var(--text); color: var(--bg); }
+.dp-day:disabled            { color: var(--text-4); opacity: 0.35; background: none; }
+.dp-nav-btn:disabled        { opacity: 0.3; background: none; }

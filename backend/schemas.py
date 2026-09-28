@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic_core import PydanticCustomError
 from typing import Optional
-from datetime import date 
+from datetime import date, datetime, timedelta, timezone
 
 # USER SCHEMAS ---------------------------
 class EmailNormalizer(BaseModel):
@@ -48,6 +49,20 @@ class Token(BaseModel):
 
 
 # JOB SCHEMAS ----------------------------
+class DateAppliedNotInFuture(BaseModel):
+    # only on create/update - not JobResponse, so older rows with a future date still load
+    @field_validator("date_applied", mode="after", check_fields=False)
+    @classmethod
+    def not_in_future(cls, v: Optional[date]) -> Optional[date]:
+        # the server runs in UTC but users pick dates in their local timezone,
+        # so allow one extra day for people ahead of UTC (e.g. India, Australia)
+        latest = datetime.now(timezone.utc).date() + timedelta(days=1)
+        if v is not None and v > latest:
+            # custom error so the message reaches the UI without a "Value error," prefix
+            raise PydanticCustomError("date_in_future", "Date applied can't be in the future")
+        return v
+
+
 class JobBase(BaseModel):
     company: str
     role: str
@@ -61,12 +76,12 @@ class JobBase(BaseModel):
     salary_max: Optional[int] = None
 
 
-class JobCreate(JobBase):
+class JobCreate(DateAppliedNotInFuture, JobBase):
     # inherits all fields from JobBase
     # no extra fields needed on creation
     pass
 
-class JobUpdate(BaseModel):
+class JobUpdate(DateAppliedNotInFuture):
     # every field is option - PATCH means updatre only what's sent
     company: Optional[str] = None
     role: Optional[str] = None
