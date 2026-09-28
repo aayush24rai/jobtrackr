@@ -3,6 +3,7 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
+from alembic.migration import MigrationContext
 from sqlalchemy import inspect
 
 from database import engine
@@ -28,8 +29,19 @@ def run_migrations():
         logger.info("Existing database without migration history - stamping baseline %s", BASELINE_REVISION)
         command.stamp(cfg, BASELINE_REVISION)
 
+    before = current_revision()
     command.upgrade(cfg, "head")
-    logger.info("Database migrations up to date")
+    after = current_revision()
+
+    if before != after:
+        logger.info("Database migrated from %s to %s", before, after)
+    else:
+        logger.info("Database migrations up to date (%s)", after)
+
+
+def current_revision():
+    with engine.connect() as conn:
+        return MigrationContext.configure(conn).get_current_revision()
 
 
 if __name__ == "__main__":
