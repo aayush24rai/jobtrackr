@@ -479,6 +479,7 @@ html, body {
 }
 .tags { display: flex; gap: 4px; flex-wrap: wrap; }
 .tag {
+  display: inline-flex; align-items: center; gap: 4px;
   font-size: 10.5px; padding: 1px 7px;
   border-radius: 4px;
   background: var(--bg-2); color: var(--text-3);
