@@ -88,7 +88,7 @@ function BoardPreview() {
       <div className="lp-shot-inner" style={{ transform: `scale(${scale})` }} inert aria-hidden="true">
         <div className="app" style={{ minHeight: '100%' }}>
           <div className="topbar">
-            <div className="brand"><div className="brand-mark">J</div>JobTrackr</div>
+            <div className="brand"><span className="brand-mark"><LogoMark size={18}/></span>JobTrackr</div>
             <div className="topbar-tabs">
               <div className="tab active">Board</div>
               <div className="tab">Calendar</div>
