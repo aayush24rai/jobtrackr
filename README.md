@@ -10,7 +10,7 @@ A kanban-style job application tracker. Track applications through each stage, l
 
 - Sign up / log in with email and password
 - Drag job cards between stages (Wishlist, Applied, Interview, Offer, Rejected)
-- Job detail drawer with notes, salary range, deadlines and links
+- Job detail drawer with location, notes, salary range, deadlines and links
 - Contacts per job: who you reached out to, how, and whether they replied
 - Interview rounds per job with dates and outcomes
 
@@ -23,6 +23,8 @@ backend/     FastAPI app (run from inside this folder)
   models.py      SQLAlchemy models (users, jobs, contacts, interviews)
   schemas.py     Pydantic request/response schemas
   routes/        /auth and /jobs endpoints
+  migrations/    Alembic database migrations
+  migrate.py     applies migrations (runs automatically on startup)
 frontend/    React + Vite single-page app
   src/api/       axios client with automatic token refresh
   src/pages/     Login, Signup, Dashboard
@@ -43,7 +45,7 @@ cp .env.example .env   # then fill in DATABASE_URL and SECRET_KEY
 uvicorn main:app --reload
 ```
 
-The API runs at http://localhost:8000 with interactive docs at http://localhost:8000/docs. Tables are created automatically on startup.
+The API runs at http://localhost:8000 with interactive docs at http://localhost:8000/docs. Database migrations run automatically on startup.
 
 **Frontend**
 
@@ -80,4 +82,20 @@ Open http://localhost:5173.
 
 - Login is limited to 10 attempts per minute and signup to 10 per hour, per IP.
 - Emails are case-insensitive; passwords must be at least 8 characters.
-- Schema changes: `create_all` only creates missing tables. Adding columns to existing tables will need a migration tool such as Alembic.
+
+## Changing the database schema
+
+The schema is managed with [Alembic](https://alembic.sqlalchemy.org/). Pending migrations are applied automatically every time the backend starts, locally and on Render.
+
+To add or change a column:
+
+1. Edit `backend/models.py` (and `schemas.py` if the API should expose it).
+2. Generate a migration against your local database:
+   ```bash
+   cd backend
+   alembic revision --autogenerate -m "describe the change"
+   ```
+3. Read the generated file in `migrations/versions/` and check that it does what you expect.
+4. Restart the backend locally to apply it, then commit the migration together with the model change. Render applies it on the next deploy.
+
+New columns on existing tables should be nullable (or have a server default) so that existing rows stay valid.
