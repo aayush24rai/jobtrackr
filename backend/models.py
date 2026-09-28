@@ -34,6 +34,8 @@ class Job(Base):
     deadline = Column(Date, nullable=True)
     notes = Column(Text, nullable=True)
     url = Column(String, nullable=True)
+    # free text so it can hold "Remote", "NYC / Hybrid", etc.
+    location = Column(String, nullable=True)
 
     salary_min = Column(Integer, nullable=True)
     salary_max = Column(Integer, nullable=True)

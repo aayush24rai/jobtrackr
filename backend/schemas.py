@@ -50,6 +50,7 @@ class JobBase(BaseModel):
     deadline: Optional[date] = None
     notes: Optional[str] = None
     url: Optional[str] = None
+    location: Optional[str] = None
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
 
@@ -68,6 +69,7 @@ class JobUpdate(BaseModel):
     deadline: Optional[date] = None
     notes: Optional[str] = None
     url: Optional[str] = None
+    location: Optional[str] = None
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
 

@@ -452,7 +452,7 @@ export default function JobDrawer({ job, onClose, onEdit }) {
 
   const initial  = (job.company?.[0] ?? '?').toUpperCase()
   const salary   = fmtSalary(job.salary_min, job.salary_max)
-  const location = job.url ? job.url.replace(/^https?:\/\//, '').split('/')[0] : null
+  const location = job.location || (job.url ? job.url.replace(/^https?:\/\//, '').split('/')[0] : null)
   const statusCls = job.status.toLowerCase()
 
   return (

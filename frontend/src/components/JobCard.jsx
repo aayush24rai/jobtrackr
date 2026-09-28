@@ -58,7 +58,9 @@ export default function JobCard({ job, onClick, isDragging = false }) {
   const deadline = deadlineInfo(job.deadline)
   const stage    = STAGE_MAP[job.status] ?? 0
   const initial  = (job.company?.[0] ?? '?').toUpperCase()
-  const urlLabel = job.url ? job.url.replace(/^https?:\/\//, '').split('/')[0] : null
+  const domain   = job.url ? job.url.replace(/^https?:\/\//, '').split('/')[0] : null
+  // prefer the real location; older jobs without one fall back to the job URL's domain
+  const urlLabel = job.location || domain
 
   return (
     <div

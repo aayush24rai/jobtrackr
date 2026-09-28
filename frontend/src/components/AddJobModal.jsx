@@ -12,7 +12,7 @@ const STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer', 'Rejected']
 
 const EMPTY = {
   company: '', role: '', status: 'Wishlist',
-  date_applied: '', deadline: '', url: '',
+  date_applied: '', deadline: '', url: '', location: '',
   salary_min: '', salary_max: '', notes: '',
 }
 
@@ -40,6 +40,7 @@ export default function AddJobModal({ initialStatus, onClose, onAdd }) {
         role:         form.role.trim(),
         status:       form.status,
         url:          form.url          || null,
+        location:     form.location.trim() || null,
         date_applied: form.date_applied || null,
         deadline:     form.deadline     || null,
         salary_min:   form.salary_min   ? parseInt(form.salary_min, 10)  : null,
@@ -70,6 +71,11 @@ export default function AddJobModal({ initialStatus, onClose, onAdd }) {
           <div className="field">
             <label>Role</label>
             <input name="role" value={form.role} onChange={set} required placeholder="e.g. Software Engineer" />
+          </div>
+
+          <div className="field">
+            <label>Location</label>
+            <input name="location" value={form.location} onChange={set} placeholder="e.g. Remote, New York, NY" />
           </div>
 
           <div className="field-row">
