@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import client from '../api/client'
 import StatsBar from '../components/StatsBar'
@@ -6,6 +6,7 @@ import KanbanBoard from '../components/KanbanBoard'
 import AddJobModal from '../components/AddJobModal'
 import JobDetailModal from '../components/JobDetailModal'
 import JobDrawer from '../components/JobDrawer'
+import ChangePasswordModal from '../components/ChangePasswordModal'
 
 // ── Icons ────────────────────────────────────────────────────────────
 const PlusIcon = () => (
@@ -25,10 +26,74 @@ const GroupIcon = () => (
   </svg>
 )
 
-// ── TopBar ───────────────────────────────────────────────────────────
-function TopBar({ user, onLogout, onAddJob }) {
+const KeyIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M17 6l3 3M14 9l2 2"/>
+  </svg>
+)
+const LogoutIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+  </svg>
+)
+
+// ── ProfileMenu ──────────────────────────────────────────────────────
+function ProfileMenu({ user, onLogout, onChangePassword }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
   // Derive initials: first 2 chars of the local part of email
   const initials = (user?.email?.split('@')[0] ?? 'U').slice(0, 2).toUpperCase()
+
+  // close when clicking anywhere outside the menu or pressing Escape
+  useEffect(() => {
+    if (!open) return
+    function onMouseDown(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div className="profile" ref={ref}>
+      <button
+        className="avatar"
+        title={user?.email}
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        {initials}
+      </button>
+
+      {open && (
+        <div className="menu" role="menu">
+          <div className="menu-hd">
+            <div className="menu-hd-label">Signed in as</div>
+            <div className="menu-hd-email">{user?.email}</div>
+          </div>
+          <button className="menu-item" role="menuitem" onClick={() => { setOpen(false); onChangePassword() }}>
+            <KeyIcon/> Change password
+          </button>
+          <button className="menu-item danger" role="menuitem" onClick={onLogout}>
+            <LogoutIcon/> Log out
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── TopBar ───────────────────────────────────────────────────────────
+function TopBar({ user, onLogout, onChangePassword, onAddJob }) {
 
   return (
     <div className="topbar">
@@ -43,9 +108,6 @@ function TopBar({ user, onLogout, onAddJob }) {
 
       <div className="topbar-spacer"/>
 
-      <button className="icon-btn" title="Notifications" onClick={onLogout} style={{ display: 'none' }}>
-        <BellIcon/>
-      </button>
       <button className="icon-btn" title="Notifications">
         <BellIcon/>
       </button>
@@ -54,9 +116,7 @@ function TopBar({ user, onLogout, onAddJob }) {
         <PlusIcon/> Add job
       </button>
 
-      <div className="avatar" title={user?.email} onClick={onLogout} style={{ cursor: 'default' }}>
-        {initials}
-      </div>
+      <ProfileMenu user={user} onLogout={onLogout} onChangePassword={onChangePassword} />
     </div>
   )
 }
@@ -108,6 +168,7 @@ export default function Dashboard() {
   const [addStatus, setAddStatus]   = useState(null)  // column id that triggered Add, or null
   const [selectedJob, setSelectedJob] = useState(null)
   const [openJobId, setOpenJobId]   = useState(null)
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
   useEffect(() => {
     client.get('/jobs/')
@@ -142,7 +203,12 @@ export default function Dashboard() {
 
   return (
     <div className={`app${openJob ? ' drawer-open' : ''}`}>
-      <TopBar user={user} onLogout={logout} onAddJob={() => setAddStatus('Wishlist')} />
+      <TopBar
+        user={user}
+        onLogout={logout}
+        onChangePassword={() => setShowChangePassword(true)}
+        onAddJob={() => setAddStatus('Wishlist')}
+      />
       <StatsBar jobs={jobs} />
       <BoardToolbar jobs={jobs} />
 
@@ -182,6 +248,10 @@ export default function Dashboard() {
           onClose={() => setOpenJobId(null)}
           onEdit={job => { setOpenJobId(null); setSelectedJob(job) }}
         />
+      )}
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
       )}
     </div>
   )
