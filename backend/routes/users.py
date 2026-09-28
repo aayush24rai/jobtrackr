@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -6,13 +6,15 @@ from database import get_db
 import models
 import schemas
 import auth
+from limiter import limiter
 
 # APIRouter groups these endpoints together
 # they'll be mounted at /auth in main.py
 router = APIRouter()
 
 @router.post("/signup", response_model=schemas.Token, status_code=status.HTTP_201_CREATED)
-def signup(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/hour")    # slowapi needs the `request` arg to find the client IP
+def signup(request: Request, user_data: schemas.UserCreate, db: Session = Depends(get_db)):
     # user_data is automatically validate by Pydantic - if email or pwd is missing or malformed FASTAPI returns 422 before this code runs
 
     # check if emaiul is already registered
@@ -56,7 +58,8 @@ def signup(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=schemas.Token)
-def login(user_data: schemas.UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")   # slows down password guessing
+def login(request: Request, user_data: schemas.UserLogin, db: Session = Depends(get_db)):
 
     # look up user by email
     user = db.query(models.User).filter(

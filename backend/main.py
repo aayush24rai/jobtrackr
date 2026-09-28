@@ -3,10 +3,12 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from slowapi.errors import RateLimitExceeded
 
 from database import engine
 from models import Base
 from routes import users, jobs
+from limiter import limiter, rate_limit_exceeded_handler
 
 # the lifespan function runs on startup and shutdown
 # creating tables here means they're always ready before requests come in
@@ -27,6 +29,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# rate limiting - the decorators on individual routes read the limiter from app.state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 
 # CORS - controls which frontend origins can call this API
